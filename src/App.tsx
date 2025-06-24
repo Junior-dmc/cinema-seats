@@ -11,6 +11,7 @@ import Sobre from './pages/Sobre';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import { NotificationProvider } from './contexts/NotificationContext';
+import NoelleSugst from './pages/NoelleSugst';
 
 // Configuração do layout
 const SEATS_MAIN_SECTION = 25; // Assentos na seção principal
@@ -149,6 +150,7 @@ function App() {
               <Route path="/assentos/:filmeId/:sessaoId" element={<AssentosPage />} />
               <Route path="/proximas-estreias" element={<ProximasEstreias />} />
               <Route path="/sobre" element={<Sobre />} />
+              <Route path="/noelle" element={<NoelleSugst />} />
             </Routes>
           </main>
           <Footer />

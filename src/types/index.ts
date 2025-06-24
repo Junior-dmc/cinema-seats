@@ -63,6 +63,7 @@ export interface Movie {
   genres: string[];
   imageUrl: string;
   description: string;
+  releaseDate?: string;
 }
 
 export interface MovieSession extends Movie {

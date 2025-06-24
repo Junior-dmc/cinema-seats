@@ -21,6 +21,11 @@ const Header: React.FC = () => {
               </Link>
             </li>
             <li>
+              <Link to="/noelle" className="hover:text-primary transition-colors">
+                Noelle
+              </Link>
+            </li>
+            <li>
               <Link to="/sobre" className="hover:text-primary transition-colors">
                 Sobre
               </Link>
