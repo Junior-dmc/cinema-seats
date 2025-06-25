@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { currentMovies, upcomingMovies } from '../../data/movies';
-import { Movie, UpcomingMovie } from '../../types';
 
 interface Message {
   text: string;
@@ -29,56 +28,80 @@ export const ChatBot: React.FC<ChatBotProps> = ({ embedded = false }) => {
     }
   };
 
-  const checkIntent = (message: string, keywords: string[]): boolean => {
+  const getIntentFromMessage = (message: string): string => {
     const messageLower = message.toLowerCase();
-    return keywords.some(keyword => messageLower.includes(keyword));
+    
+    if (messageLower.includes('preço') || messageLower.includes('custa') || messageLower.includes('valor')) {
+      return 'preco';
+    }
+    if (messageLower.includes('horário') || messageLower.includes('hora') || messageLower.includes('começa')) {
+      return 'horario';
+    }
+    if (messageLower.includes('classificação') || messageLower.includes('idade') || messageLower.includes('criança')) {
+      return 'classificacao';
+    }
+    if (messageLower.includes('legenda') || messageLower.includes('dublado') || messageLower.includes('idioma')) {
+      return 'idioma';
+    }
+    if (messageLower.includes('duração') || messageLower.includes('tempo') || messageLower.includes('dura')) {
+      return 'duracao';
+    }
+    if (messageLower.includes('pipoca') || messageLower.includes('comida') || messageLower.includes('bebida')) {
+      return 'alimentacao';
+    }
+    return '';
+  };
+
+  const getGenericResponse = (intent: string): string => {
+    switch (intent) {
+      case 'preco':
+        return 'Os preços dos ingressos variam:\n' +
+               '- Segunda a quinta: R$ 32,00\n' +
+               '- Sexta a domingo: R$ 38,00\n' +
+               '- Meia-entrada disponível mediante apresentação de documento\n' +
+               '- Promoção às quartas-feiras: todos pagam meia!';
+      
+      case 'horario':
+        return 'Temos várias sessões durante o dia:\n' +
+               '- Matinê: 14h00 e 16h30\n' +
+               '- Noite: 19h00 e 21h30\n' +
+               'Horários podem variar conforme o filme. Quer saber de algum filme específico?';
+      
+      case 'classificacao':
+        return 'A classificação indicativa varia por filme. Posso te informar sobre um filme específico! Qual filme você quer saber?';
+      
+      case 'idioma':
+        return 'Oferecemos sessões dubladas e legendadas:\n' +
+               '- Sessões dubladas: 14h00 e 19h00\n' +
+               '- Sessões legendadas: 16h30 e 21h30\n' +
+               'Alguns filmes têm audiodescrição disponível!';
+      
+      case 'duracao':
+        return 'A duração varia por filme. Me diga qual filme você quer saber!';
+      
+      case 'alimentacao':
+        return 'Sim! Temos uma bomboniere completa:\n' +
+               '- Pipocas (doce e salgada)\n' +
+               '- Refrigerantes e sucos\n' +
+               '- Chocolates e doces\n' +
+               '- Combos com desconto!';
+      
+      default:
+        return '';
+    }
   };
 
   const generateResponse = (message: string): string => {
     const messageLower = message.toLowerCase();
-
-    // Saudações
-    if (checkIntent(messageLower, ['oi', 'olá', 'hey', 'boa', 'bom'])) {
+    
+    // Verifica se é uma saudação
+    if (messageLower.match(/\b(olá|oi|hey|e aí|boa|bom)\b/)) {
       return "Olá! Como posso ajudar você hoje? Posso te dar informações sobre filmes em cartaz, próximas estreias, horários, preços ou fazer recomendações!";
     }
 
-    // Despedidas
-    if (checkIntent(messageLower, ['tchau', 'até', 'adeus', 'obrigado', 'obrigada'])) {
+    // Verifica se é uma despedida
+    if (messageLower.match(/\b(tchau|até|adeus|obrigado|obrigada)\b/)) {
       return "Até mais! Foi um prazer ajudar. Volte sempre ao nosso cinema! 🎬";
-    }
-
-    // Preços
-    if (checkIntent(messageLower, ['preço', 'valor', 'custo', 'ingresso'])) {
-      return 'Os preços dos ingressos variam:\n' +
-             '- Segunda a quinta: R$ 32,00\n' +
-             '- Sexta a domingo: R$ 38,00\n' +
-             '- Meia-entrada disponível mediante apresentação de documento\n' +
-             '- Promoção às quartas-feiras: todos pagam meia!';
-    }
-
-    // Horários
-    if (checkIntent(messageLower, ['horário', 'hora', 'sessão', 'começa'])) {
-      return 'Temos várias sessões durante o dia:\n' +
-             '- Matinê: 14h00 e 16h30\n' +
-             '- Noite: 19h00 e 21h30\n' +
-             'Horários podem variar conforme o filme. Quer saber de algum filme específico?';
-    }
-
-    // Idioma
-    if (checkIntent(messageLower, ['legenda', 'dublado', 'idioma', 'áudio'])) {
-      return 'Oferecemos sessões dubladas e legendadas:\n' +
-             '- Sessões dubladas: 14h00 e 19h00\n' +
-             '- Sessões legendadas: 16h30 e 21h30\n' +
-             'Alguns filmes têm audiodescrição disponível!';
-    }
-
-    // Alimentação
-    if (checkIntent(messageLower, ['pipoca', 'comida', 'bebida', 'lanche'])) {
-      return 'Sim! Temos uma bomboniere completa:\n' +
-             '- Pipocas (doce e salgada)\n' +
-             '- Refrigerantes e sucos\n' +
-             '- Chocolates e doces\n' +
-             '- Combos com desconto!';
     }
 
     // Procura por filmes específicos
@@ -98,19 +121,22 @@ export const ChatBot: React.FC<ChatBotProps> = ({ embedded = false }) => {
       }
     }
 
-    // Filmes em cartaz
+    // Classificação de intenção
+    const intent = getIntentFromMessage(messageLower);
+    const genericResponse = getGenericResponse(intent);
+    if (genericResponse) return genericResponse;
+
+    // Respostas para perguntas sobre filmes em geral
     if (messageLower.includes('em cartaz')) {
       return `Aqui estão os filmes em cartaz:\n\n${currentMovies.map(movie => 
         `🎬 ${movie.title}\n   Duração: ${movie.duration}min | Classificação: ${movie.ageRating} anos`).join('\n\n')}`;
     }
 
-    // Próximas estreias
     if (messageLower.includes('estreia') || messageLower.includes('próximo')) {
       return `Aqui estão as próximas estreias:\n\n${upcomingMovies.map(movie => 
         `🎬 ${movie.title}\n   Estreia: ${formatDate(movie.releaseDate)}`).join('\n\n')}`;
     }
 
-    // Recomendações
     if (messageLower.includes('recomend') || messageLower.includes('sugest')) {
       const randomMovie = currentMovies[Math.floor(Math.random() * currentMovies.length)];
       return `Que tal assistir "${randomMovie.title}"?\n\n` +
@@ -118,7 +144,7 @@ export const ChatBot: React.FC<ChatBotProps> = ({ embedded = false }) => {
              `📝 ${randomMovie.description}`;
     }
 
-    // Resposta padrão
+    // Resposta padrão se nenhuma outra condição for atendida
     return "Desculpe, não entendi completamente. Você pode:\n" +
            "- Perguntar sobre um filme específico\n" +
            "- Ver o que está em cartaz\n" +
@@ -161,7 +187,7 @@ export const ChatBot: React.FC<ChatBotProps> = ({ embedded = false }) => {
           </div>
         ))}
       </div>
-      <div className="border-t border-gray-700 p-4">
+      <div className="p-4 border-t border-gray-700">
         <div className="flex space-x-2">
           <input
             type="text"
@@ -169,11 +195,11 @@ export const ChatBot: React.FC<ChatBotProps> = ({ embedded = false }) => {
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
             placeholder="Digite sua mensagem..."
-            className="flex-1 bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="flex-1 p-2 rounded bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
           <button
             onClick={handleSendMessage}
-            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
             Enviar
           </button>

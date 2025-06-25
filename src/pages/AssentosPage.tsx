@@ -4,10 +4,10 @@ import { Button } from "../components/ui/button";
 import { Seat } from "../components/Seat";
 import { Legend } from "../components/Legend";
 import { useNotification } from "../contexts/NotificationContext";
-import { movieSessions } from "../data/movies";
+import { movieSessions, currentMovies } from "../data/movies";
+import { PaymentModal } from "../components/Payment/PaymentModal";
 
 // Configuração do layout
-const SEATS_PER_ROW = 33; // Total de assentos por fileira
 const SEATS_BEFORE_AISLE = 14; // Assentos antes do corredor
 const SEATS_AFTER_AISLE = 14; // Assentos depois do corredor
 const AISLE_SIZE = 5; // Tamanho do corredor (em número de assentos)
@@ -99,14 +99,16 @@ const AssentosPage: React.FC = () => {
   const navigate = useNavigate();
   const { showNotification } = useNotification();
   const [seats, setSeats] = useState<SeatInfo[]>(createInitialSeats);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   
-  // Buscar informações da sessão
+  // Buscar informações da sessão e do filme
   const movieId = Number(filmeId);
   const sessionId = Number(sessaoId);
   const sessions = movieSessions[movieId] || [];
   const currentSession = sessions.find(s => s.id === sessionId);
+  const movie = currentMovies.find(m => m.id === movieId);
 
-  if (!currentSession) {
+  if (!currentSession || !movie) {
     return (
       <div className="min-h-screen bg-gray-900 text-white p-8 flex items-center justify-center">
         <div className="text-center">
@@ -118,6 +120,7 @@ const AssentosPage: React.FC = () => {
   }
 
   const selectedSeats = seats.filter((seat) => seat.status === "selected");
+  const totalPrice = selectedSeats.length * currentSession.price;
 
   const handleSeatClick = (seatId: string) => {
     setSeats((prevSeats) => {
@@ -156,22 +159,7 @@ const AssentosPage: React.FC = () => {
       return;
     }
     
-    // Simula o processamento da reserva
-    setTimeout(() => {
-      const selectedIds = selectedSeats.map(s => s.id).join(', ');
-      const total = selectedSeats.length * currentSession.price;
-      showNotification('success', `Reserva confirmada para os assentos: ${selectedIds}. Total: R$ ${total.toFixed(2)}`);
-      navigate(`/sessoes/${movieId}`);
-    }, 1000);
-  }
-
-  // Função para renderizar uma seção de assentos
-  const renderSeats = (section: "left" | "main" | "right") => {
-    return seats
-      .filter(seat => seat.section === section)
-      .map((seat) => (
-        <Seat key={seat.id} seatInfo={seat} onSeatClick={handleSeatClick} />
-      ));
+    setIsPaymentModalOpen(true);
   };
 
   return (
@@ -262,19 +250,36 @@ const AssentosPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Legenda e Botões */}
-        <div className="mt-8">
-          <Legend />
-          <div className="flex justify-center gap-4 mt-4">
-            <Button onClick={() => navigate(`/sessoes/${movieId}`)}>
-              Voltar
-            </Button>
-            <Button onClick={handleConfirmSelection}>
-              Confirmar Seleção ({selectedSeats.length} assentos)
+        {/* Legenda */}
+        <Legend />
+
+        {/* Informações da Seleção */}
+        <div className="mt-8 p-4 bg-gray-800 rounded-lg">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-lg">Assentos selecionados: {selectedSeats.map(s => s.id).join(', ')}</p>
+              <p className="text-xl font-bold mt-2">Total: R$ {totalPrice.toFixed(2)}</p>
+            </div>
+            <Button
+              onClick={handleConfirmSelection}
+              disabled={selectedSeats.length === 0}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              Continuar para Pagamento
             </Button>
           </div>
         </div>
       </div>
+
+      {/* Modal de Pagamento */}
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        movie={movie}
+        selectedSeats={selectedSeats.map(s => s.id)}
+        sessionTime={`${currentSession.date} - ${currentSession.time}`}
+        totalPrice={totalPrice}
+      />
     </div>
   );
 };

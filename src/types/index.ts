@@ -77,4 +77,46 @@ export interface MovieSession extends Movie {
 export interface UpcomingMovie extends Movie {
   releaseDate: string;
   description: string;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  password: string;
+  profilePicture?: string;
+  preferences: UserPreferences;
+  purchaseHistory: PurchaseHistory[];
+}
+
+export interface UserPreferences {
+  favoriteGenres: string[];
+  preferredSeatingArea: 'front' | 'middle' | 'back';
+  preferredShowtimes: string[];
+  notificationPreferences: {
+    email: boolean;
+    push: boolean;
+    sms: boolean;
+  };
+}
+
+export type ReservationStatus = 'active' | 'completed' | 'cancelled' | 'expired';
+
+export interface PurchaseHistory {
+  id: string;
+  movieId: number;
+  movieTitle: string;
+  moviePoster: string;
+  sessionDate: string;
+  sessionTime: string;
+  seats: string[];
+  totalAmount: number;
+  purchaseDate: string;
+  paymentMethod: string;
+  status: ReservationStatus;
+  room: string;
+  qrCode?: string;
+  rating?: number;
+  comment?: string;
+  cancellationReason?: string;
 } 
